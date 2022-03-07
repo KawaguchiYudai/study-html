@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <title>notifier_test</title>
+</head>
+
+<style>
+    * {
+        margin: 0px;
+        padding: 0px;
+        overflow: hidden
+    }
+
+    body {
+        background-color: #000000;
+    }
+
+    canvas {
+        position: absolute;
+    }
+</style>
+
+<script>
+    var n;
+    //起動時
+    window.onload = () => {
+        n = new notifier();
+        n.posY = 200;
+        n.maxCount = 5;
+        n.time = 5000;
+        n.marginVertical = 5;
+        n.marginHorizontal = 3;
+        n.color = '#00f';
+        n.alpha = 0.8;
+    };
+
+    class notifier {
+        #posX = 0;
+        set posX(x) {
+            this.#posX = x;
+        }
+        #posY = 0;
+        set posY(y) {
+            this.#posY = y;
+        }
+
+        #width = 100;
+        set width(width) {
+            this.#width = width;
+        }
+        #height = 25;
+        set height(height) {
+            this.#height = height;
+        }
+
+        #marginVertical = 0;
+        set marginVertical(vertical) {
+            this.#marginVertical = vertical;
+        }
+        #marginHorizontal = 0;
+        set marginHorizontal(horizontal) {
+            this.#marginHorizontal = horizontal;
+        }
+
+        #color = '#FFF';
+        set color(color) {
+            this.#color = color;
+        }
+        #alpha = 1;
+        set alpha(alpha) {
+            this.#alpha = alpha;
+        }
+
+        #textColor = '#FFF';
+        set textColor(color) {
+            this.#textColor = color;
+        }
+        #textAlpha = 1;
+        set textAlpha(alpha) {
+            this.#textAlpha = alpha;
+        }
+        #textMarginVertical = 1;
+        set textMarginVertical(vertical) {
+            this.#textMarginVertical = vertical;
+        }
+        #textMarginHorizontal = 1;
+        set textMarginHorizontal(horizontal) {
+            this.#textMarginHorizontal = horizontal;
+        }
+
+        #time = 1000;
+        set time(time) {
+            this.#time = time;
+        }
+        #maxCount = 1;
+        set maxCount(count) {
+            this.#maxCount = count;
+        }
+
+        #count = 0;
+        #canvas;
+        #timeout;
+        #stickers;
+        push(text) {
+            if (this.#count === this.#maxCount) return;
+            if (this.#count == 0) {
+                this.#canvas = document.createElement("canvas");
+                this.#canvas.width = this.#width + this.#marginHorizontal;
+                this.#canvas.height = this.#height * this.#maxCount + this.#marginVertical * (this.#maxCount - 1);
+                this.#canvas.style.top = `${this.#posY}px`;
+                this.#canvas.style.left = `${this.#posX}px`;
+                document.body.appendChild(this.#canvas);
+            }
+
+            let context = this.#canvas.getContext('2d');
+            context.fillStyle = this.#color;
+            context.globalAlpha = this.#alpha;
+            const rectPosX = this.#marginHorizontal;
+            const rectPosY = this.#height * this.#count + this.#marginVertical * this.#count;
+            context.fillRect(rectPosX, rectPosY, this.#width, this.#height);
+
+            context.font = `${this.#height - 2}px serif`;
+            context.fillStyle = this.#textColor;
+            context.globalAlpha = this.#textAlpha;
+            const textPosX = this.#marginHorizontal + this.#textMarginHorizontal * 2;
+            const textPosY = this.#height * (this.#count + 1) + this.#marginVertical * this.#count - this.#textMarginVertical * 2;
+            context.fillText(text, textPosX, textPosY, this.#width - this.#textMarginHorizontal * 2);
+            this.#count++;
+
+            setTimeout(() => { this.#count--; }, this.#time);
+
+            if (this.#timeout != undefined) clearTimeout(this.#timeout);
+            this.#timeout = setTimeout(() => { this.#canvas.remove(); }, this.#time)
+        }
+    }
+</script>
+
+<body>
+    <a href="#" onclick="n.push('ハムスター');">確認</a>
+</body>
+
+</html>
