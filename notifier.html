@@ -11,16 +11,11 @@
     * {
         margin: 0px;
         padding: 0px;
-        overflow: hidden
     }
 
-    body {
+    /*body {
         background-color: #000000;
-    }
-
-    canvas {
-        position: absolute;
-    }
+    }*/
 </style>
 
 <script>
@@ -36,6 +31,90 @@
         n.color = '#00f';
         n.alpha = 0.8;
     };
+    class stickers {
+        #active = false;
+
+        #posX = 0;
+        #posY = 0;
+        #width = 100;
+        #height = 25;
+
+        #time = 5000;
+        #moveTime = 1000;
+
+        #popDirection = 'right';
+
+        #canvas;
+        #context;
+        #timeout;
+        constructor(width, height, x, y) {
+            this.#width = width;
+            this.#height = height;
+            this.#posX = x;
+            this.#posY = y;
+
+            this.#canvas = document.createElement("canvas");
+            this.#canvas.width = this.#width;
+            this.#canvas.height = this.#height;
+            this.#canvas.style.position = 'absolute';
+            this.#canvas.style.overflow = 'hidden';
+            this.#canvas.style.top = `${this.#posY}px`;
+            this.#canvas.style.left = `${this.#posX}px`;
+            document.body.appendChild(this.#canvas);
+
+            this.#context = this.#canvas.getContext('2d');
+        }
+        on(draw = (ctx, width, height, x, y) => { }) {
+            this.#active = true;
+
+            let interval;
+            switch (this.#popDirection) {
+                case 'right':
+                    const deltaX = - this.#posX / this.moveTime;
+                    const date = new Date().getTime();
+                    interval = setInterval(() => {
+                        const deltaTime = (new Date().getTime()) - date;
+                        if (deltaTime >= this.moveTime) {
+                            clearInterval(interval);
+                            draw(this.#context, this.#width, this.#height, 0, 0);
+                            return;
+                        }
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        draw(this.#context, this.#width, this.#height, deltaX, 0);
+                    }, this.#moveTime);
+                    break;
+            }
+
+            this.#timeout = setTimeout(() => { this.out(); }, this.time);
+        }
+        out() {
+            this.#active = false;
+
+        }
+        move(x, y) {
+            const deltaX = (x !== 0) ? x / this.moveTime : 0;
+            const deltaY = (y !== 0) ? y / this.moveTime : 0;
+            const date = new Date().getTime();
+            const interval = setInterval(() => {
+                const deltaTime = (new Date().getTime()) - date;
+                if (deltaTime >= this.moveTime) {
+                    clearInterval(interval);
+                    this.#posY += y;
+                    this.#posX += x;
+                    this.#canvas.style.top = `${this.#posY}px`;
+                    this.#canvas.style.left = `${this.#posX}px`;
+                    return;
+                }
+                this.#canvas.style.top = `${this.#posY + deltaY * deltaTime}px`;
+                this.#canvas.style.left = `${this.#posX + deltaX * deltaTime}px`;
+                return;
+            }, 30 / 1000)
+        }
+
+        delete() {
+            this.#canvas.remove();
+        }
+    }
 
     class notifier {
         #posX = 0;
@@ -105,14 +184,48 @@
         #timeout;
         #stickers;
         push(text) {
+            let a = new stickers(this.#width, this.#height, this.#posX, this.#posY);
+            a.on(function (ctx, width, height, x, y) {
+                ctx.fillStyle = this.#color;
+                ctx.globalAlpha = this.#alpha;
+                ctx.fillRect(x, y, width, height);
+
+                ctx.font = `${height - this.#textMarginVertical * 2}px serif`;
+                ctx.fillStyle = this.#textColor;
+                ctx.globalAlpha = this.#textAlpha;
+                ctx.fillText(
+                    text,
+                    x + this.#textMarginHorizontal,
+                    y + height - this.#textMarginVertical,
+                    width - this.#textMarginHorizontal * 2
+                );
+            })
+            return;
             if (this.#count === this.#maxCount) return;
             if (this.#count == 0) {
                 this.#canvas = document.createElement("canvas");
                 this.#canvas.width = this.#width + this.#marginHorizontal;
                 this.#canvas.height = this.#height * this.#maxCount + this.#marginVertical * (this.#maxCount - 1);
+                this.#canvas.style.position = 'absolute';
+                this.#canvas.style.overflow = 'hidden';
                 this.#canvas.style.top = `${this.#posY}px`;
                 this.#canvas.style.left = `${this.#posX}px`;
                 document.body.appendChild(this.#canvas);
+            }
+            (ctx, width, height, x, y) => {
+                ctx.fillStyle = this.#color;
+                ctx.globalAlpha = this.#alpha;
+                ctx.fillRect(x, y, width, height);
+
+                ctx.font = `${height - this.#textMarginVertical * 2}px serif`;
+                ctx.fillStyle = this.#textColor;
+                ctx.globalAlpha = this.#textAlpha;
+                ctx.fillText(
+                    text,
+                    x + this.#textMarginHorizontal,
+                    y + height - this.#textMarginVertical,
+                    width - this.#textMarginHorizontal * 2
+                );
             }
 
             let context = this.#canvas.getContext('2d');
@@ -140,6 +253,7 @@
 
 <body>
     <a href="#" onclick="n.push('ハムスター');">確認</a>
+    <canvas height="0" width="=100"> </canvas>
 </body>
 
 </html>
